@@ -16,13 +16,7 @@ import pandas as pd
 import csv
 import re
 import json
-
-
-# In[2]:
-
-
 from tqdm import trange
-
 
 # In[3]:
 
@@ -49,7 +43,7 @@ print(len(import_GSE()))
 
 
 def scrape_geo_data(geo_id):
-    url = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={geo_id}"
+    url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
 
     try:
         response = requests.get(url)
@@ -66,10 +60,10 @@ def scrape_geo_data(geo_id):
             return gsm_values
 
         else:
-            return f"Failed to retrieve the page. Status code: {response.status_code}"
+            return "Failed to retrieve the page. Status code: {0}".format(response.status_code)
 
     except requests.exceptions.RequestException as e:
-        return f"Error: {e}"
+        return "Error: {0}".format(e)
 
 
 # In[6]:
@@ -77,7 +71,7 @@ def scrape_geo_data(geo_id):
 
 GSEs_human = import_GSE()[0]
 GSM_human = []
-for GSE in GSEs_human[:10]:
+for GSE in GSEs_human:
     GSMs_human = scrape_geo_data(GSE)
     GSM_human.append(GSMs_human)
     #data[GSE] = GSMs
@@ -114,7 +108,7 @@ csv_file_path = "data/GSM_human.csv"
 
 
 def scrape_characteristics(geo_id):
-    url = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={geo_id}"
+    url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
 
     try:
         response = requests.get(url)
@@ -132,13 +126,13 @@ def scrape_characteristics(geo_id):
                 characteristics_content = characteristics_label.find_next_sibling('td')
                 characteristics_string = str(characteristics_content)
 
-            return characteristics_string
+                return characteristics_string
 
-        else:
-            return f"Failed to retrieve the page. Status code: {response.status_code}"
+    
+        return "Failed to retrieve the page. Status code: {0}".format(response.status_code)
 
     except requests.exceptions.RequestException as e:
-        return f"Error: {e}"
+        return "Error: {0}".format(e)
 
 
 # In[11]:
@@ -190,7 +184,7 @@ json_file = "data/test_characteristics_human.json"
 with open(json_file, "w") as file:
     json.dump(results, file)
 
-print(f"Characteristics saved to {json_file}")
+print("Characteristics saved to {0}".format(json_file))
 
 
 # In[16]:
@@ -212,7 +206,7 @@ attribute_texts = []
 
 for key, value in data.items():
     # Include the attribute key and its value
-    attribute_text = f"{key}: {str(value)}"
+    attribute_text = "{0}: {str(1)}".format(key, value)
     attribute_texts.append(attribute_text)
 
 text_data = " ".join(attribute_texts)
@@ -233,7 +227,7 @@ plt.show()
 
 
 def scrape_characteristics(geo_id):
-    url = f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={geo_id}"
+    url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
 
     try:
         response = requests.get(url)
@@ -254,10 +248,10 @@ def scrape_characteristics(geo_id):
             return characteristics_string
 
         else:
-            return f"Failed to retrieve the page. Status code: {response.status_code}"
+            return "Failed to retrieve the page. Status code: {0}".format(response.status_code)
 
     except requests.exceptions.RequestException as e:
-        return f"Error: {e}"
+        return "Error: {0}".format(e)
 
 
 # In[18]:
@@ -303,7 +297,7 @@ for geo_id in GSM_human:
 
 print("Attribute Counts:")
 for attribute, count in attribute_counts.items():
-    print(f"{attribute}: {count}")
+    print("{0}: {1}".format(attribute, count))
 
 
 # In[ ]:
