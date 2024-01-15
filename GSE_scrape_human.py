@@ -1,14 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
-
-# Converted from the associated ipynb file on Jan 14 at 12:05pm using
-# jupyter nbconvert --to script 'GSE_scrape_human.ipynb'
-
-# # GSE Accession Analysis for human: Wordcloud for GSM Characteristics
-# This notebook took the first 10 GSE accession numbers of human species to retreive their respective GSM and looked at the wordcloud for characterstics.
-
-# In[1]:
-
 
 import requests
 from bs4 import BeautifulSoup
@@ -17,37 +7,40 @@ import csv
 import re
 import json
 from tqdm import trange
+import json
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+import string
 
-# In[3]:
+"""GSE Accession Analysis for human: Wordcloud for GSM Characteristics
+ by Xinran Bi
+ 
+ Modified by Halie Rando as follows:
+- Converted from GSE_scrape_human.ipynb on Jan 14 at 12:05pm using `jupyter nbconvert --to script`
+- Debugged return statement being outside of an if loop
+- Refactored to use the same code for both mouse and human
+"""
 
+species = mouse
 
-def import_GSE():
+def import_GSE(species):
+    """Filters a dataframe form GREIN by species
+    Accepts: species name ("mouse" or "human")
+    Returns: pandas dataframe
+    """
     GREIN_data = pd.read_csv("data/GREIN_data.csv")
-    GREIN_data = GREIN_data[GREIN_data.Species != 'Rattus norvegicus'] #drop brown rat
-    GREIN_human = GREIN_data[GREIN_data.Species == 'Homo sapiens']
-    GREIN_mouse = GREIN_data[GREIN_data.Species == 'Mus musculus']
-    
-    GSE_human = GREIN_human['GEO accession'].tolist()
-    GSE_mouse = GREIN_mouse['GEO accession'].tolist()
-    
-    return GSE_human, GSE_mouse
-
-
-# In[4]:
-
-
-print(len(import_GSE()))
-
-
-# In[5]:
-
+    if species == "mouse":
+        GREIN = GREIN_data[GREIN_data.Species == 'Mus musculus']
+    elif species == "human":
+        GREIN = GREIN_data[GREIN_data.Species == 'Homo sapiens']
+    GSE = GREIN['GEO accession'].tolist()
+    return GSE
 
 def scrape_geo_data(geo_id):
     url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
 
     try:
         response = requests.get(url)
-
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -66,46 +59,25 @@ def scrape_geo_data(geo_id):
         return "Error: {0}".format(e)
 
 
-# In[6]:
-
-
-GSEs_human = import_GSE()[0]
-GSM_human = []
-for GSE in GSEs_human:
-    GSMs_human = scrape_geo_data(GSE)
-    GSM_human.append(GSMs_human)
+GSEs = import_GSE(species)
+GSM = []
+for GSE in GSEs:
+    GSMs = scrape_geo_data(GSE)
+    GSM.append(GSMs)
     #data[GSE] = GSMs
 
-
-# In[7]:
-
-
-if GSMs_human:
-    GSM_human = [item for sublist in GSM_human for item in sublist] #flatten the list
-    print(GSM_human)
-
-
-# In[8]:
-
+if GSMs:
+    GSM = [item for sublist in GSM for item in sublist] #flatten the list
 
 def save_results_to_file(results, filename):
     with open(filename, 'w', encoding='utf-8') as file:
         for result in results:
             file.write(result + '\n')
 
-
-# In[9]:
-
-
 csv_file_path = "data/GSM_human.csv"
-
 # with open(csv_file_path, mode='w', newline='') as file:
 #     writer = csv.writer(file)
 #     writer.writerow(GSM_human)
-
-
-# In[10]:
-
 
 def scrape_characteristics(geo_id):
     url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
@@ -134,24 +106,12 @@ def scrape_characteristics(geo_id):
     except requests.exceptions.RequestException as e:
         return "Error: {0}".format(e)
 
-
-# In[11]:
-
-
 def extract_characteristics(input_str):
-    
     input_str = re.sub(r'<td[^>]*>', '', input_str) # remove <td> tags
-    
     pattern = r'(\w+): ([^<]+)'
     matches = re.findall(pattern, input_str)
-
     characteristics_dictionary = dict(matches)
-    
     return characteristics_dictionary
-
-
-# In[12]:
-
 
 geo_id = "GSM2683998"
 characteristics_string = scrape_characteristics(geo_id)
@@ -159,41 +119,19 @@ characteristics_dictionary = extract_characteristics(characteristics_string )
 print("characteristics_dictionary:", characteristics_dictionary)
 
 
-# In[13]:
-
-
 results = {}
-print(GSM_human)
-
-
-# In[14]:
-
-
-for GSM in GSM_human:
+for GSM in GSM:
     characteristics_string = scrape_characteristics(GSM)
     characteristics_dictionary = extract_characteristics(characteristics_string)
     results[GSM] = characteristics_dictionary
     #print(f"Characteristics for {GSM}: {characteristics_dictionary}")
 
-
-# In[15]:
-
-
 json_file = "data/test_characteristics_human.json"
-
 with open(json_file, "w") as file:
     json.dump(results, file)
 
 print("Characteristics saved to {0}".format(json_file))
 
-
-# In[16]:
-
-
-import json
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
-import string
 
 def remove_punctuation(text):
     translator = str.maketrans('', '', string.punctuation)
@@ -221,9 +159,6 @@ plt.figure(figsize=(10, 5))
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis("off")
 plt.show()
-
-
-# In[17]:
 
 
 def scrape_characteristics(geo_id):
@@ -254,9 +189,6 @@ def scrape_characteristics(geo_id):
         return "Error: {0}".format(e)
 
 
-# In[18]:
-
-
 def extract_characteristics(input_str):
     
     input_str = re.sub(r'<td[^>]*>', '', input_str) # remove <td> tags
@@ -275,12 +207,10 @@ def extract_characteristics(input_str):
     return characteristics_dictionary
 
 
-# In[ ]:
-
 
 attribute_counts = {}
 
-for geo_id in GSM_human:
+for geo_id in GSM:
     characteristics_string = scrape_characteristics(geo_id)
     characteristics_dictionary = extract_characteristics(characteristics_string)
 
@@ -298,10 +228,4 @@ for geo_id in GSM_human:
 print("Attribute Counts:")
 for attribute, count in attribute_counts.items():
     print("{0}: {1}".format(attribute, count))
-
-
-# In[ ]:
-
-
-
 
