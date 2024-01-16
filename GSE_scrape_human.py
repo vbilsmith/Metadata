@@ -97,16 +97,8 @@ GSM = []
 for GSE in GSEs:
     GSMs = scrape_geo_data(GSE)
     GSM.append(GSMs)
-    #data[GSE] = GSMs
-GSM1 = len(GSM)
 
-if GSMs:
-    GSM = [item for sublist in GSM for item in sublist] #flatten the list
-GSM2 = len(GSM)
-
-if GSM1 != GSM2:
-    print("There is a bug-- the first GSM list is {0} and the second is {1}".format(GSM1, GSM2))
-    sys.exit(1)
+GSM = [item for sublist in GSM for item in sublist] #flatten the list
 
 results = {}
 for GSM in GSM:
