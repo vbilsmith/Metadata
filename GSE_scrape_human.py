@@ -89,11 +89,7 @@ def save_results_to_file(results, filename):
             file.write(result + '\n')
 
 # Define species from standard in
-species = str()
-for line in sys.stdin:
-    if 'q' == line.rstrip():
-        break
-    species = line
+species = sys.argv[1]
 
 # Identify all relevant GSEs for this species
 GSEs = import_GSE(species)
