@@ -3,9 +3,9 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import csv
 import re
 import json
+import sys
 from tqdm import trange
 
 
@@ -17,8 +17,6 @@ from tqdm import trange
 - Debugged return statement being outside of an if loop
 - Refactored to use the same code for both mouse and human
 """
-
-species = mouse
 
 def import_GSE(species):
     """Filters a dataframe form GREIN by species
@@ -56,26 +54,6 @@ def scrape_geo_data(geo_id):
         return "Error: {0}".format(e)
 
 
-GSEs = import_GSE(species)
-GSM = []
-for GSE in GSEs:
-    GSMs = scrape_geo_data(GSE)
-    GSM.append(GSMs)
-    #data[GSE] = GSMs
-
-if GSMs:
-    GSM = [item for sublist in GSM for item in sublist] #flatten the list
-
-def save_results_to_file(results, filename):
-    with open(filename, 'w', encoding='utf-8') as file:
-        for result in results:
-            file.write(result + '\n')
-
-csv_file_path = "data/GSM_human.csv"
-# with open(csv_file_path, mode='w', newline='') as file:
-#     writer = csv.writer(file)
-#     writer.writerow(GSM_human)
-
 def scrape_characteristics(geo_id):
     url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc={0}".format(geo_id)
 
@@ -84,12 +62,12 @@ def scrape_characteristics(geo_id):
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            
+
             characteristics_dict = {}
-            
+
             # Find the "Characteristics" label
             characteristics_label = soup.find('td', text='Characteristics')
-            
+
             if characteristics_label:
                 # Get the next sibling (which contains the characteristics content)
                 characteristics_content = characteristics_label.find_next_sibling('td')
@@ -103,18 +81,43 @@ def scrape_characteristics(geo_id):
     except requests.exceptions.RequestException as e:
         return "Error: {0}".format(e)
 
+
 def extract_characteristics(input_str):
-    input_str = re.sub(r'<td[^>]*>', '', input_str) # remove <td> tags
+    input_str = re.sub(r'<td[^>]*>', '', input_str)  # remove <td> tags
     pattern = r'(\w+): ([^<]+)'
     matches = re.findall(pattern, input_str)
     characteristics_dictionary = dict(matches)
     return characteristics_dictionary
 
-geo_id = "GSM2683998"
-characteristics_string = scrape_characteristics(geo_id)
-characteristics_dictionary = extract_characteristics(characteristics_string )
-print("characteristics_dictionary:", characteristics_dictionary)
+def save_results_to_file(results, filename):
+    with open(filename, 'w', encoding='utf-8') as file:
+        for result in results:
+            file.write(result + '\n')
 
+
+# Define species from standard in
+species = str()
+for line in sys.stdin:
+    if 'q' == line.rstrip():
+        break
+    species = line
+
+# Identify all relevant GSEs for this species
+GSEs = import_GSE(species)
+GSM = []
+for GSE in GSEs:
+    GSMs = scrape_geo_data(GSE)
+    GSM.append(GSMs)
+    #data[GSE] = GSMs
+GSM1 = len(GSM)
+
+if GSMs:
+    GSM = [item for sublist in GSM for item in sublist] #flatten the list
+GSM2 = len(GSM)
+
+if GSM1 != GSM2:
+    print("There is a bug-- the first GSM list is {0} and the second is {1}".format(G2M1, GSM2))
+    exit(1)
 
 results = {}
 for GSM in GSM:
@@ -123,10 +126,9 @@ for GSM in GSM:
     results[GSM] = characteristics_dictionary
     #print(f"Characteristics for {GSM}: {characteristics_dictionary}")
 
-json_file = "data/test_characteristics_human.json"
+json_file = "data/test_characteristics_{0}.json".format(species)
 with open(json_file, "w") as file:
     json.dump(results, file)
 
 print("Characteristics saved to {0}".format(json_file))
-
 
