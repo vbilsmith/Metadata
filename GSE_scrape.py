@@ -93,22 +93,22 @@ species = sys.argv[1]
 
 # Identify all relevant GSEs for this species
 GSEs = import_GSE(species)
-GSM = []
-for GSE in GSEs:
-    GSMs = scrape_geo_data(GSE)
-    GSM.append(GSMs)
+full_results = dict()
+num_records = dict()
+for GSE in GSEs[:100]:
+    GSM_list = [item for sublist in scrape_geo_data(GSE) for item in sublist] #flatten the list
+    num_records[GSE] = len(GSM_list)
+    results = {}
+    # for GSM in GSM_list:
+    #     characteristics_string = scrape_characteristics(GSM)
+    #     characteristics_dictionary = extract_characteristics(characteristics_string)
+    #     results[GSM] = characteristics_dictionary
+    #     #print(f"Characteristics for {GSM}: {characteristics_dictionary}")
+    #full_results[GSE] = results
 
-GSM = [item for sublist in GSM for item in sublist] #flatten the list
-
-results = {}
-for GSM in GSM:
-    characteristics_string = scrape_characteristics(GSM)
-    characteristics_dictionary = extract_characteristics(characteristics_string)
-    results[GSM] = characteristics_dictionary
-    #print(f"Characteristics for {GSM}: {characteristics_dictionary}")
-
+print(num_records)
 json_file = "data/test_characteristics_{0}.json".format(species)
 with open(json_file, "w") as file:
-    json.dump(results, file)
+    json.dump(full_results, file)
 
 print("Characteristics saved to {0}".format(json_file))
